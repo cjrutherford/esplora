@@ -23,11 +23,13 @@ export default function render(pathname, args='', body, locals={}, cb) {
   let timeout = setTimeout(_ => done({ errorCode: 500 }), INIT_STATE_TIMEOUT)
 
   function done(data) {
+    console.log("🚀 ~ done ~ data:", data)
     if (called) return console.error('html render result() called too many times', pathname, '\n------\ndata: ', data, '\n------\n lastState:', lastState, '\n------\n lastHtml:', lastHtml, '\n\n\n');
     called = true
     clearTimeout(timeout)
     dispose()
 
+    if(!data) console.log(lastState.title, lastState.view, lastState.error)
     cb(null, data || {
       html: lastHtml
     , title: lastState.title
@@ -39,6 +41,7 @@ export default function render(pathname, args='', body, locals={}, cb) {
     lastHtml = html
   }
   function stateUpdate(S) {
+    console.log("🚀 ~ stateUpdate ~ S:", S)
     if (!lastState) { // the first state
       clearTimeout(timeout)
       timeout = setTimeout(_ => done(), ROUTE_TIMEOUT)

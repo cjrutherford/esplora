@@ -31,8 +31,21 @@ app.use(require('body-parser').urlencoded({ extended: false }))
 app.use(cache('5 minutes'));
 
 app.use((req, res, next) => {
+  console.log('Request URL:', req.url);
+  console.log('Request URI:', req._parsedUrl.pathname);
+  console.log('Request Body:', req.body);
   // TODO: optimize /block-height/nnn (no need to render the whole app just to get the redirect)
-
+  if (req.url.startsWith('/block-height/')) {
+    let blockHeight = req.url.substr(14)
+    request(`${apiUrl}/block-height/${blockHeight}`).then(resp => {
+      if (resp.ok) {
+        res.redirect(301, baseHref + '/block/' + resp.text)
+      } else {
+        res.sendStatus(404)
+      }
+    }).catch(next)
+    return
+  }
   let theme = req.query.theme || req.cookies.theme || 'dark'
   if (!themes.includes(theme)) theme = 'light'
   if (req.query.theme && req.cookies.theme !== theme) res.cookie('theme', theme)
@@ -47,6 +60,7 @@ app.use((req, res, next) => {
     req.body, 
     { theme, lang }, 
     (err, resp) => {
+      console.log(resp, err)
       if (err) return next(err)
       if (resp.redirect) return res.redirect(301, baseHref + resp.redirect.substr(1))
       if (resp.errorCode) {
